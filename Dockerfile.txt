@@ -1,0 +1,41 @@
+#
+# Redis Dockerfile
+#
+
+#
+
+# Pull base image.
+FROM dockerfile/ubuntu
+
+# Install Redis.
+RUN \
+
+  mkdir -p ~/repos && \
+  cd ~/repos && \
+  git clone https://github.com/mattsta/redis && \
+  cd redis && \
+  git checkout dynamic-redis-unstable && \
+  cd .. && \
+  git clone https://github.com/mattsta/krmt && \
+  cd krmt && \
+  make -j && \
+  make install && \
+  redis-cli config set module-add `pwd`/geo.so
+  sed -i 's/^\(bind .*\)$/# \1/' /etc/redis/redis.conf && \
+  sed -i 's/^\(daemonize .*\)$/# \1/' /etc/redis/redis.conf && \
+  sed -i 's/^\(dir .*\)$/# \1\ndir \/data/' /etc/redis/redis.conf && \
+  sed -i 's/^\(logfile .*\)$/# \1/' /etc/redis/redis.conf
+
+
+
+# Define mountable directories.
+VOLUME ["/data"]
+
+# Define working directory.
+WORKDIR /data
+
+# Define default command.
+CMD ["redis-server", "/etc/redis/redis.conf"]
+
+# Expose ports.
+EXPOSE 6379
